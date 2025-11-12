@@ -11,9 +11,16 @@ Key features
 - Clean, minimalist design
 
 How to run localy
+
+On Windows:
+1. Download or clone this repo.  
+2. Open the folder in VS Code.  
+3. Install the Live Server extension.  
+4. Right click `index.html` – Open with Live Server.
+   
 On macOS:
 1. Download or clone this repo.  
-2. Open Terminal → `cd path/to/habit-tracker`  
+2. Open Terminal – `cd path/to/habit-tracker`  
 3. Run a quick local server:
    ```bash
    python3 -m http.server
