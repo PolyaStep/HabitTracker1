@@ -39,3 +39,6 @@ Self assessment
 |Data handling |Safe read/write, JSON schema fallback, XSS-safe|yes|`load()` validation, `textContent` only|
 |Documentation| Features, run steps Win/macOS, screenshots, reflection, self assessment|yes|This README|
 |Deployment| GitHub pages live and linked|yes|Live URL below|
+
+Link
+https://YOUR_USERNAME.github.io/YOUR_REPO/
