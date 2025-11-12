@@ -15,6 +15,8 @@ function lastNDates(n) {
 
 let habits = JSON.parse(localStorage.getItem("habits") || "[]");
 
+habits = habits.map((h) => ({ name: h.name, days: h.days || {} }));
+
 const form = document.getElementById("habit-form");
 const input = document.getElementById("habit-input");
 const tbody = document.querySelector("#habit-table tbody");
@@ -39,6 +41,18 @@ function calcStreak(habit) {
 function render() {
   tbody.innerHTML = "";
 
+  if (habits.length === 0) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 10;
+    td.textContent = "No habits yet. Add one above!";
+    td.style.textAlign = "center";
+    td.style.color = "#777";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
   habits.forEach((habit, idx) => {
     const tr = document.createElement("tr");
 
@@ -50,12 +64,23 @@ function render() {
       const key = dateKey(d);
       const td = document.createElement("td");
       td.title = key;
+      td.tabIndex = 0;
       if (habit.days[key]) td.classList.add("done");
-      td.addEventListener("click", () => {
+
+      const toggle = () => {
         habit.days[key] = !habit.days[key];
         save();
         render();
+      };
+
+      td.addEventListener("click", toggle);
+      td.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggle();
+        }
       });
+
       tr.appendChild(td);
     });
 
@@ -64,9 +89,11 @@ function render() {
     tr.appendChild(streakTd);
 
     const actionsTd = document.createElement("td");
-    const tickTodayBtn = document.createElement("button");
-    tickTodayBtn.textContent = "Tick today";
-    tickTodayBtn.addEventListener("click", () => {
+
+    const tickBtn = document.createElement("button");
+    tickBtn.type = "button";
+    tickBtn.textContent = "Tick today";
+    tickBtn.addEventListener("click", () => {
       const key = dateKey(today());
       habit.days[key] = true;
       save();
@@ -74,6 +101,7 @@ function render() {
     });
 
     const delBtn = document.createElement("button");
+    delBtn.type = "button";
     delBtn.textContent = "Delete";
     delBtn.style.marginLeft = "8px";
     delBtn.addEventListener("click", () => {
@@ -82,7 +110,7 @@ function render() {
       render();
     });
 
-    actionsTd.appendChild(tickTodayBtn);
+    actionsTd.appendChild(tickBtn);
     actionsTd.appendChild(delBtn);
     tr.appendChild(actionsTd);
 
@@ -92,12 +120,17 @@ function render() {
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
-  const name = input.value.trim();
-  if (!name) return;
+  const name = (input.value || "").trim();
+
+  if (!name) {
+    alert("Please enter a habit name before adding!");
+    input.focus();
+    return;
+  }
 
   if (habits.some((h) => h.name.toLowerCase() === name.toLowerCase())) {
-    input.value = "";
-    input.focus();
+    alert("That habit already exists.");
+    input.select();
     return;
   }
 
