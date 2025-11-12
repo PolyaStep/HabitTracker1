@@ -13,16 +13,42 @@ function lastNDates(n) {
   return out;
 }
 
-let habits = JSON.parse(localStorage.getItem("habits") || "[]");
-
-habits = habits.map((h) => ({ name: h.name, days: h.days || {} }));
-
 const form = document.getElementById("habit-form");
 const input = document.getElementById("habit-input");
 const tbody = document.querySelector("#habit-table tbody");
+const statusEl = document.getElementById("status");
+
+function setStatus(msg, kind = "info") {
+  if (!statusEl) return;
+  statusEl.textContent = msg || "";
+  statusEl.className = kind === "error" ? "status error" : "status";
+  if (msg) setTimeout(() => setStatus(""), 3000);
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem("habits");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    // shape guard
+    return parsed.map((h) => ({ name: String(h.name || "").trim(), days: h.days || {} }))
+                 .filter((h) => h.name.length > 0);
+  } catch {
+    setStatus("Stored data was corrupted and has been reset.", "error");
+    localStorage.removeItem("habits");
+    return [];
+  }
+}
+
+let habits = load();
 
 function save() {
-  localStorage.setItem("habits", JSON.stringify(habits));
+  try {
+    localStorage.setItem("habits", JSON.stringify(habits));
+  } catch {
+    setStatus("Could not save data to this browser.", "error");
+  }
 }
 
 function calcStreak(habit) {
@@ -98,6 +124,7 @@ function render() {
       habit.days[key] = true;
       save();
       render();
+      setStatus(`Marked today for "${habit.name}".`);
     });
 
     const delBtn = document.createElement("button");
@@ -108,6 +135,7 @@ function render() {
       habits.splice(idx, 1);
       save();
       render();
+      setStatus(`Deleted habit "${habit.name}".`);
     });
 
     actionsTd.appendChild(tickBtn);
@@ -123,13 +151,17 @@ form.addEventListener("submit", (e) => {
   const name = (input.value || "").trim();
 
   if (!name) {
-    alert("Please enter a habit name before adding!");
+    setStatus("Please enter a habit name before adding!", "error");
     input.focus();
     return;
   }
-
+  if (name.length > 40) {
+    setStatus("Habit name is too long (max 40 chars).", "error");
+    input.focus();
+    return;
+  }
   if (habits.some((h) => h.name.toLowerCase() === name.toLowerCase())) {
-    alert("That habit already exists.");
+    setStatus("That habit already exists.", "error");
     input.select();
     return;
   }
@@ -138,6 +170,7 @@ form.addEventListener("submit", (e) => {
   save();
   input.value = "";
   render();
+  setStatus(`Added "${name}".`);
 });
 
 render();
